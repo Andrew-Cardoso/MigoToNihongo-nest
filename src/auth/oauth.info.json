@@ -1,0 +1,11 @@
+{
+  "web": {
+    "client_id": "973475207838-n2si1lmtilprm23vebo78g18rnt1u6oc.apps.googleusercontent.com",
+    "project_id": "migo-to-nihongo",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret": "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",
+    "redirect_uris": ["http://localhost:3333/"]
+  }
+}

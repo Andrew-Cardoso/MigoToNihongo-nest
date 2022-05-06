@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String     @id
+  email           String     @unique
+  name            String
+  passwordHash    String?
+  passwordSalt    String?
+  accountVerified Boolean    @default(false)
+  photo           String?
+  signInType      SignInType @default(LOCAL)
+  roles           Role[]
+  post            Post[]
+  comment         Comment[]
+}
+
+model Role {
+  id    String @id
+  name  String
+  users User[] @relation(references: [id])
+}
+
+model Post {
+  id         String    @id
+  title      String
+  content    String
+  date       String
+  jsDateTime DateTime
+  linkText   String?
+  authorId   String
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments   Comment[]
+}
+
+model Comment {
+  id         String   @id
+  content    String
+  date       String
+  jsDateTime DateTime
+  approved   Boolean  @default(false)
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId     String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+enum SignInType {
+  LOCAL
+  GOOGLE
+  FACEBOOK
+}
