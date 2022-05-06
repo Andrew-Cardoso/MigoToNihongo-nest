@@ -3,7 +3,6 @@ import { PrismaClient, User } from '@prisma/client';
 import { Roles } from 'src/auth/constants/roles';
 import { generateHashAndSalt } from 'src/auth/utils/crypto';
 import { uuid } from 'src/utils/functions/uuid-generator';
-import { SMTP_CONFIG } from '../email/email.config';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -18,7 +17,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       const admin: User = {
         id: uuid(),
         accountVerified: true,
-        email: SMTP_CONFIG.user,
+        email: 'acceptcoins@gmail.com',
         name: 'Admin',
         passwordHash,
         passwordSalt,
