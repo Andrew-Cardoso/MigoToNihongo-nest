@@ -6,5 +6,12 @@ import { AppModule } from './app.module';
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.enableCors({ origin: 'http://localhost:3333' });
-  await app.listen(3000);
+  let port: number;
+
+  try {
+    port = parseInt(process.env.PORT);
+  } catch (e) {
+    port = 3000;
+  }
+  await app.listen(port);
 })();
