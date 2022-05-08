@@ -9,6 +9,8 @@ import { CreatePostDto } from './dtos/create-post.dto';
 import { PostDto } from './dtos/post.dto';
 import { PostsService } from './posts.service';
 
+// teste
+
 @Controller('posts')
 export class PostsController {
   constructor(private postsService: PostsService) {}
