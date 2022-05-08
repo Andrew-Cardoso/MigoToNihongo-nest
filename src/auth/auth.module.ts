@@ -6,10 +6,12 @@ import { JWT } from './strategy/jwt.constants';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { PrismaModule } from 'src/utils/modules/prisma/prisma.module';
 import { GoogleStrategy } from './strategy/google.strategy';
+import { EmailModule } from 'src/utils/modules/email/email.module';
 
 @Module({
   imports: [
     PrismaModule,
+    EmailModule,
     JwtModule.register({
       secret: JWT.secret,
     }),

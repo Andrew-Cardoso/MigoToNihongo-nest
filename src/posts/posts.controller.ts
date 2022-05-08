@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesEnum } from 'src/auth/constants/roles';
 import { User } from 'src/auth/decorators/get-user.decorator';
 import { RoleGuard } from 'src/auth/guards/role.guard';
 import { CurrentUser } from 'src/auth/types/current-user';
@@ -20,7 +19,7 @@ export class PostsController {
     return await this.postsService.getPosts();
   }
 
-  @UseGuards(AuthGuard('jwt'), RoleGuard(RolesEnum.AUTHOR))
+  @UseGuards(AuthGuard('jwt'), RoleGuard('AUTHOR'))
   @MapTo(PostDto)
   @Post()
   async createPost(

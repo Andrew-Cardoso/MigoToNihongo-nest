@@ -3,6 +3,7 @@ import { PostsModule } from './posts/posts.module';
 import { PrismaModule } from './utils/modules/prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { EmailModule } from './utils/modules/email/email.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { AdminModule } from './admin/admin.module';
     // }),
     PostsModule,
     AdminModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

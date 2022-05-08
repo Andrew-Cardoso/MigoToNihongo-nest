@@ -16,18 +16,12 @@ model User {
   name            String
   passwordHash    String?
   passwordSalt    String?
-  accountVerified Boolean    @default(false)
   photo           String?
+  accountVerified Boolean    @default(false)
   signInType      SignInType @default(LOCAL)
   roles           Role[]
-  post            Post[]
-  comment         Comment[]
-}
-
-model Role {
-  id    String @id
-  name  String
-  users User[] @relation(references: [id])
+  posts           Post[]
+  comments        Comment[]
 }
 
 model Post {
@@ -36,7 +30,7 @@ model Post {
   content    String
   date       String
   jsDateTime DateTime
-  linkText   String?
+  linkText   String
   authorId   String
   author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments   Comment[]
@@ -58,4 +52,9 @@ enum SignInType {
   LOCAL
   GOOGLE
   FACEBOOK
+}
+
+enum Role {
+  ADMIN
+  AUTHOR
 }

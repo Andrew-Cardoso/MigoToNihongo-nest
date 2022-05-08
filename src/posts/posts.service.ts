@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RolesEnum } from 'src/auth/constants/roles';
+import { Role } from '@prisma/client';
 import { CurrentUser } from 'src/auth/types/current-user';
 import { getDateNow } from 'src/utils/functions/temporal';
 import { uuid } from 'src/utils/functions/uuid-generator';
@@ -33,11 +33,8 @@ export class PostsService {
     postId: string,
     { email, roles }: CurrentUser,
   ) {
-    const approved = roles.some((role) =>
-      [RolesEnum[RolesEnum.ADMIN], RolesEnum[RolesEnum.AUTHOR]].includes(
-        role.id,
-      ),
-    );
+    const approvedRoles: Role[] = ['ADMIN', 'AUTHOR'];
+    const approved = roles.some((role) => approvedRoles.includes(role));
     const comment = await this.prisma.comment.create({
       data: {
         id: uuid(),

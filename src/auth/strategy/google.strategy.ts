@@ -10,7 +10,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: GOOGLE.clientId,
       clientSecret: GOOGLE.clientSecret,
-      callbackURL: 'http://localhost:3000/auth/google/callback',
+      callbackURL: 'https://migo-to-nihongo.herokuapp.com/auth/google/callback',
       scope: ['email', 'profile'],
     });
   }

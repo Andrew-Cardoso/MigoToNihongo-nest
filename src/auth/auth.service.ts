@@ -1,14 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Role, SignInType, User } from '@prisma/client';
+import { badRequest, unauthorized } from 'src/utils/functions/error-handler';
 import { getDateNow } from 'src/utils/functions/temporal';
 import { uuid } from 'src/utils/functions/uuid-generator';
+import { EmailService } from 'src/utils/modules/email/email.service';
 import { PrismaService } from 'src/utils/modules/prisma/prisma.service';
-import { RolesEnum } from './constants/roles';
 import { UserSignUpDto } from './dtos/user-sign-up.dto';
 import { GoogleUser } from './types/google-user';
 import { checkPassword, generateHashAndSalt } from './utils/crypto';
@@ -24,20 +21,39 @@ export class AuthService {
     // private emailService: EmailService,
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
+
+  // async teste() {
+  //   console.log('truing');
+  //   try {
+  //     const response = await this.emailService.sendEmail({
+  //       html: '<h1>Email from google gmailApi</h1>',
+  //       subject: 'migoto nihongo gmail api',
+  //       to: 'andrewgcardoso@gmail.com',
+  //     });
+
+  //     console.log('sent');
+
+  //     console.log(response);
+
+  //     return response;
+  //   } catch (error) {
+  //     console.log(error);
+  //     return error;
+  //   }
+  // }
 
   async signInLocal(email: string, password: string) {
     const user = await this.getUser(email);
 
-    if (!user)
-      throw new UnauthorizedException(
-        'Usuário nao encontrado, por favor crie uma conta ou entre pelo google',
-      );
+    if (!user) unauthorized('Não autorizado', 'Usuário ou senha inválidos');
 
     if (user.signInType !== 'LOCAL') {
       const signInType = getSignInType(user.signInType);
-      throw new UnauthorizedException(
-        `Sua conta está vinculada ao ${signInType}, por favor entre com o ${signInType}.`,
+      unauthorized(
+        `Conta vinculada ao ${signInType}`,
+        `por favor entre com o ${signInType}.`,
       );
     }
 
@@ -47,13 +63,13 @@ export class AuthService {
       user.passwordSalt,
     );
 
-    if (!isPasswordCorrect) throw new UnauthorizedException('Senha incorreta');
+    if (!isPasswordCorrect)
+      unauthorized('Não autorizado', 'Usuário ou senha inválidos');
 
     // if (!user.accountVerified)
-    //   throw new UnauthorizedException(
-    //     `Por favor, verifique o seu email antes de entrar.
-    //     Se voce nao recebeu o email por favor clique no botao "Enviar email de verificacao"
-    //     e lembre-se de olhar a caixa de spam.`,
+    //   unauthorized(
+    //     'Email não confirmado',
+    //     'Se não recebeu o email de verificação clique em "Reenviar email de verificação" e não esqueça de verificar sua caixa de spam',
     //   );
 
     return await this.createJwtToken(user);
@@ -63,9 +79,10 @@ export class AuthService {
     const createdUser = await this.getUser(email);
     if (createdUser) {
       const signInType = getSignInType(createdUser.signInType);
-      throw new BadRequestException(
+      badRequest(
+        'Email já cadastrado',
         createdUser.signInType === 'LOCAL'
-          ? 'Email já cadastrado'
+          ? 'Se esquceu sua senha clique em "Esqueci minha senha"'
           : `Sua conta está vinculada ao ${signInType}, por favor entre com o ${signInType}.`,
       );
     }
@@ -80,19 +97,18 @@ export class AuthService {
         passwordSalt,
         photo,
         signInType: 'LOCAL',
+        roles: [],
       },
-      include: { roles: true },
     });
 
-    return await this.createJwtToken(user);
-
     // await this.sendVerificationEmail(name, email);
+    return await this.createJwtToken(user);
   }
 
   // async checkUserAndSendVerificationEmail(email: string, password: string) {
   //   const user = await this.validCredentials(email, password);
 
-  //   if (!user) throw new UnauthorizedException('Invalid email or password');
+  //   if (!user) unauthorized('Invalid email or password');
 
   //   return await this.sendVerificationEmail(user.name, user.email);
   // }
@@ -104,7 +120,7 @@ export class AuthService {
   //     throw new NotFoundException('Email not found, do you have an account?');
 
   //   if (user.accountVerified)
-  //     throw new BadRequestException('Your email has already been verified.');
+  //     badRequest('Your email has already been verified.');
 
   //   const cachedToken: string = await this.cacheManager.get(email);
 
@@ -130,9 +146,7 @@ export class AuthService {
     roles,
     photo,
   }: User & { roles: Role[] }) {
-    const isAdmin = roles.some(
-      (role) => role.id === RolesEnum[RolesEnum.ADMIN],
-    );
+    const isAdmin = roles.includes('ADMIN');
     const expirationDate = getDateNow().add(
       isAdmin ? { hours: 1 } : { days: 7 },
     );
@@ -154,7 +168,6 @@ export class AuthService {
   private getUser(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
-      include: { roles: true },
     });
   }
 
@@ -163,12 +176,14 @@ export class AuthService {
 
     if (dbUser) {
       if (dbUser.signInType === 'FACEBOOK')
-        throw new UnauthorizedException(
+        unauthorized(
+          'Forma de login inválida',
           `Sua conta está vinculada ao Facebook, por favor entre com o Facebook.`,
         );
 
       if (dbUser.signInType === 'LOCAL')
-        throw new UnauthorizedException(
+        unauthorized(
+          'Forma de login inválida',
           `Sua conta foi criada pelo Migo To Nihongo, por favor entre email e senha.`,
         );
 
@@ -184,7 +199,6 @@ export class AuthService {
         accountVerified: googleUser.verified,
         signInType: 'GOOGLE',
       },
-      include: { roles: true },
     });
 
     return this.createJwtToken(user);

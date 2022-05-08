@@ -11,7 +11,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesEnum } from 'src/auth/constants/roles';
 import { User } from 'src/auth/decorators/get-user.decorator';
 import { UserDto } from 'src/auth/dtos/user.dto';
 import { RoleGuard } from 'src/auth/guards/role.guard';
@@ -22,7 +21,7 @@ import { AdminService } from './admin.service';
 import { AddRemoveRoleDto } from './dtos/add-remove-role.dto';
 import { UnapprovedCommentDto } from './dtos/unapproved-comment.dto';
 
-@UseGuards(AuthGuard('jwt'), RoleGuard(RolesEnum.ADMIN))
+@UseGuards(AuthGuard('jwt'), RoleGuard('ADMIN'))
 @Controller('admin')
 export class AdminController {
   constructor(private adminService: AdminService) {}

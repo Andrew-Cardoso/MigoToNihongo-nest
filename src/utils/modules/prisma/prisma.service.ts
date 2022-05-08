@@ -1,6 +1,5 @@
 import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient, User } from '@prisma/client';
-import { Roles } from 'src/auth/constants/roles';
 import { generateHashAndSalt } from 'src/auth/utils/crypto';
 import { uuid } from 'src/utils/functions/uuid-generator';
 
@@ -9,24 +8,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   async onModuleInit() {
     await this.$connect();
 
-    if (!(await this.role.count())) {
-      const { passwordHash, passwordSalt } = await generateHashAndSalt(
-        process.env.ADMIN_PASSWORD,
-      );
+    if (await this.user.count()) return;
 
-      const admin: User = {
-        id: uuid(),
-        accountVerified: true,
-        email: 'acceptcoins@gmail.com',
-        name: 'Admin',
-        passwordHash,
-        passwordSalt,
-        photo: null,
-        signInType: 'LOCAL',
-      };
+    const { passwordHash, passwordSalt } = await generateHashAndSalt(
+      process.env.ADMIN_PASSWORD,
+    );
 
-      await this.user.create({ data: { ...admin, roles: { create: Roles } } });
-    }
+    const admin: User = {
+      id: uuid(),
+      accountVerified: true,
+      email: 'acceptcoins@gmail.com',
+      name: 'Admin',
+      passwordHash,
+      passwordSalt,
+      photo: null,
+      signInType: 'LOCAL',
+      roles: ['ADMIN'],
+    };
+
+    await this.user.create({ data: admin });
   }
 
   async enableShutdownHooks(app: INestApplication) {
