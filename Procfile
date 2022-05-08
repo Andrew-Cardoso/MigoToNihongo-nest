@@ -1,1 +1,1 @@
-web: yarn start:prod
+web: yarn prisma db push && yarn start:prod
