@@ -1,6 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Role, User } from '@prisma/client';
 import { CurrentUser } from 'src/auth/types/current-user';
+import { badRequest, notFound } from 'src/utils/functions/error-handler';
+import { getRoleViewName } from 'src/utils/functions/role';
 import { PrismaService } from 'src/utils/modules/prisma/prisma.service';
 
 @Injectable()
@@ -31,63 +33,50 @@ export class AdminService {
     return null;
   }
 
-  async addRole(email: string, roleId: string) {
-    // const [user, role] = await this.getUserAndRole(email, roleId);
+  async addRole(email: string, role: Role) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        roles: true,
+        name: true,
+      },
+    });
 
-    // if (user.roles.some((userRole) => id === roleId))
-    //   throw new BadRequestException(
-    //     `${user.name} já é um ${RolesEnum[role.id]}`,
-    //   );
+    if (!user) notFound('Erro', 'Usuário não encontrado');
 
-    // await this.prisma.user.update({
-    //   data: { roles: { connect: { id: role.id } } },
-    //   where: { id: user.id },
-    // });
+    if (user.roles.includes(role))
+      badRequest('Erro', `${user.name} já é um ${getRoleViewName(role)}`);
 
-    // return role;
+    const roles = [...user.roles, role];
+    await this.prisma.user.update({ where: { email }, data: { roles } });
 
-    return null;
+    return roles;
   }
 
-  async removeRole(email: string, roleId: string, currentUser: CurrentUser) {
-    // if (email === currentUser.email && roleId === RolesEnum[RolesEnum.ADMIN])
-    //   throw new BadRequestException(
-    //     'Você não pode remover seu cargo de administrador',
-    //   );
+  async removeRole(email: string, role: Role, currentUser: CurrentUser) {
+    if (email === currentUser.email && role === Role.ADMIN)
+      badRequest('Erro', 'Você não pode remover seu cargo de administrador');
 
-    // const [user, role] = await this.getUserAndRole(email, roleId);
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        name: true,
+        roles: true,
+      },
+    });
 
-    // if (user.roles.every(({ id }) => id !== role.id))
-    //   throw new BadRequestException(
-    //     `${user.name} não é um ${RolesEnum[role.id]}`,
-    //   );
+    if (!user) notFound('Erro', 'Usuário não encontrado');
 
-    // await this.prisma.user.update({
-    //   where: { email },
-    //   data: { roles: { disconnect: { id: role.id } } },
-    // });
+    if (!user.roles.includes(role))
+      badRequest('Erro', `${user.name} não é um ${getRoleViewName(role)}`);
 
-    // return role;
+    const roles = user.roles.filter((userRole) => userRole !== role);
 
-    return null;
-  }
+    await this.prisma.user.update({
+      where: { email },
+      data: { roles },
+    });
 
-  private async getUserAndRole(
-    email: string,
-    roleId: string,
-  ): Promise<[User & { roles: Role[] }, Role]> {
-    // const [user, role] = await Promise.all([
-    //   this.prisma.user.findUnique({
-    //     where: { email },
-    //     include: { roles: true },
-    //   }),
-    //   this.prisma.role.findFirst({ where: { id: roleId } }),
-    // ]);
-
-    // if (!user) throw new BadRequestException('Usuário não encontrado');
-    // if (!role) throw new BadRequestException('Cargo não encontrado');
-
-    // return [user, role];
-    return null;
+    return roles;
   }
 }

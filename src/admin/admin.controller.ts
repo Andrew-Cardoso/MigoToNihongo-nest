@@ -50,17 +50,16 @@ export class AdminController {
     return await this.adminService.deleteComment(id);
   }
 
-  @HttpCode(HttpStatus.OK)
-  @Post('/add-role')
-  async addRole(@Body() { email, roleId }: AddRemoveRoleDto) {
-    return this.adminService.addRole(email, roleId);
+  @Patch('/add-role')
+  async addRole(@Body() { email, role }: AddRemoveRoleDto) {
+    return this.adminService.addRole(email, role);
   }
 
   @Patch('/remove-role')
   async removeRole(
     @User() currentUser: CurrentUser,
-    @Body() { email, roleId }: AddRemoveRoleDto,
+    @Body() { email, role }: AddRemoveRoleDto,
   ) {
-    return this.adminService.removeRole(email, roleId, currentUser);
+    return this.adminService.removeRole(email, role, currentUser);
   }
 }

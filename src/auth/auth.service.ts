@@ -198,6 +198,7 @@ export class AuthService {
         photo: googleUser.photo,
         accountVerified: googleUser.verified,
         signInType: 'GOOGLE',
+        roles: [],
       },
     });
 
