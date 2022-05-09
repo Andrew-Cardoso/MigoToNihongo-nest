@@ -7,5 +7,5 @@ import { AppModule } from './app.module';
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.enableCors({ origin: 'http://localhost:3333' });
 
-  await app.listen(process.env.APP_PORT);
+  await app.listen(process.env.PORT);
 })();

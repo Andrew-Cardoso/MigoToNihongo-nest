@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { google } from 'googleapis';
-import NodeMailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 
 type Message = Pick<Mail.Options, 'attachments' | 'subject' | 'to' | 'html'>;
@@ -32,66 +30,44 @@ type Message = Pick<Mail.Options, 'attachments' | 'subject' | 'to' | 'html'>;
 // );
 
 // oAuthClient.setCredentials({ refresh_token: REFRESH_TOKEN });
-
-// const transport = nodemailer.createTransport("SMTP", {
-//   service: "hotmail",
-//   auth: {
-//       user: "user@outlook.com",
-//       pass: "password"
-//   }
-// });
-const createTransporter = () =>
-  NodeMailer.createTransport(
-    {
-      host: 'smtp.hostinger.com',
-      port: 465,
-      auth: {
-        user: 'noreply@migotonihongo.com.br',
-        pass: '7cNBrENwKKQ2jZX7==y%b!nv#3n?ttP&=Npyv@dYqSwB$JnT+8',
-      },
-    },
-    //   {
-    //   host: process.env.SMTP_HOST,
-    //   port: +process.env.SMTP_PORT,
-    //   auth: {
-    //     user: process.env.SMTP_USER,
-    //     pass: process.env.SMTP_PASS,
-    //   },
-    //   tls: {
-    //     rejectUnauthorized: false,
-    //   },
-    //   secure: false,
-    // }
-  );
+// const createTransporter = () =>
+//   NodeMailer.createTransport(
+//     {
+//       host: '',
+//       port: 0,
+//       auth: {
+//         user: '',
+//         pass: '',
+//       },
+//     },
+//     //   {
+//     //   host: process.env.SMTP_HOST,
+//     //   port: +process.env.SMTP_PORT,
+//     //   auth: {
+//     //     user: process.env.SMTP_USER,
+//     //     pass: process.env.SMTP_PASS,
+//     //   },
+//     //   tls: {
+//     //     rejectUnauthorized: false,
+//     //   },
+//     //   secure: false,
+//     // }
+// );
 
 @Injectable()
 export class EmailService {
-  private readonly transporter = Object.freeze(createTransporter());
+  // private readonly transporter = Object.freeze(createTransporter());
 
   constructor() {}
 
   async sendEmail(message: Message) {
-    // const accessToken = await oAuthClient.getAccessToken();
-
-    // console.log(accessToken);
-
-    // const transporter = (NodeMailer as any).createTransport({
-    //   service: 'gmail',
-    //   auth: {
-    //     type: 'OAuth2',
-    //     user: process.env.SMTP_USER,
-    //     clientId: process.env.OAUTH_CLIENT_ID,
-    //     clientSecret: process.env.OAUTH_CLIENT_SECRET,
-    //     refreshToken: REFRESH_TOKEN,
-    //     accessToken,
-    //   },
-    // });
-
-    const mailOptions: Mail.Options = {
-      ...message,
-      from: 'Migoto Nihongo',
-    };
-    console.log('sending');
-    return await this.transporter.sendMail(mailOptions);
+    // const mailOptions: Mail.Options = {
+    //   ...message,
+    //   from: 'Migoto Nihongo',
+    // };
+    // console.log('sending');
+    // return await this.transporter.sendMail(mailOptions);
+    console.log(message);
+    return { success: true };
   }
 }
