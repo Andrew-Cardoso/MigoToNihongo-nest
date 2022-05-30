@@ -1,73 +1,92 @@
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import Mail from 'nodemailer/lib/mailer';
+import NodeMailer from 'nodemailer';
+import { uuid } from 'src/utils/functions/uuid-generator';
+import { RedisIdEnum } from '../../functions/redis-id.generator';
+import {
+  confirmUserUpdate,
+  resetPasswordTemplate,
+  verificationEmailTemplate,
+} from './email.templates';
+import { User } from '@prisma/client';
 
 type Message = Pick<Mail.Options, 'attachments' | 'subject' | 'to' | 'html'>;
-// TODO Response Sample //
-// {
-//   "accepted": [
-//     "andrewgcardoso@gmail.com"
-//   ],
-//   "rejected": [],
-//   "envelopeTime": 870,
-//   "messageTime": 1023,
-//   "messageSize": 286,
-//   "response": "250 2.0.0 OK  1651926930 d15-20020a05683025cf00b0060603221278sm2555636otu.72 - gsmtp",
-//   "envelope": {
-//     "from": "",
-//     "to": [
-//       "andrewgcardoso@gmail.com"
-//     ]
-//   },
-//   "messageId": "<bb53df2f-4d7c-ac41-61af-67c9d209bf0e@Nika>"
-// }
-// const REFRESH_TOKEN =
-//   '1//04y43Fgc6yfXMCgYIARAAGAQSNwF-L9IrvsHewGi9pSDo9EE9qm95KZN19Gkt87I9awIiYxGcSYd4PGEoHD6ayGxS1Ctx2LXGizA';
-
-// const oAuthClient = new google.auth.OAuth2(
-//   process.env.OAUTH_CLIENT_ID,
-//   process.env.OAUTH_CLIENT_SECRET,
-//   'https://developers.google.com/oauthplayground/',
-// );
-
-// oAuthClient.setCredentials({ refresh_token: REFRESH_TOKEN });
-// const createTransporter = () =>
-//   NodeMailer.createTransport(
-//     {
-//       host: '',
-//       port: 0,
-//       auth: {
-//         user: '',
-//         pass: '',
-//       },
-//     },
-//     //   {
-//     //   host: process.env.SMTP_HOST,
-//     //   port: +process.env.SMTP_PORT,
-//     //   auth: {
-//     //     user: process.env.SMTP_USER,
-//     //     pass: process.env.SMTP_PASS,
-//     //   },
-//     //   tls: {
-//     //     rejectUnauthorized: false,
-//     //   },
-//     //   secure: false,
-//     // }
-// );
 
 @Injectable()
 export class EmailService {
-  // private readonly transporter = Object.freeze(createTransporter());
+  private readonly transporter = Object.freeze(
+    NodeMailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: +process.env.EMAIL_PORT,
+      auth: {
+        user: process.env.EMAIL_ADDRESS,
+        pass: process.env.EMAIL_PASS,
+      },
+      secure: true,
+      tls: {
+        rejectUnauthorized: true,
+      },
+    }),
+  );
 
-  constructor() {}
+  constructor(
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
+  ) {}
 
-  async sendEmail(message: Message) {
-    // const mailOptions: Mail.Options = {
-    //   ...message,
-    //   from: 'Migoto Nihongo',
-    // };
-    // console.log('sending');
-    // return await this.transporter.sendMail(mailOptions);
-    console.log(message);
-    return { success: true };
+  async sendVerificationEmail(name: string, email: string) {
+    const token = uuid();
+    await this.cacheManager.set(RedisIdEnum.verify(email), token);
+
+    const to = email;
+    const subject = 'Bem vindo ao Migo To Nihongo';
+    const href = `${process.env.URL}/auth/verify-email?email=${email}&token=${token}`;
+    const html = verificationEmailTemplate(name, href);
+
+    return this.sendEmail({ to, subject, html });
+  }
+
+  async sendResetPasswordEmail(name: string, email: string) {
+    const token = uuid();
+    await this.cacheManager.set(RedisIdEnum.reset(email), token, { ttl: 1200 });
+
+    const to = email;
+    const subject = 'Redefinir senha - Migo To Nihongo';
+    const href = `${process.env.FRONTEND_URL}/reset-password?email=${email}&resettoken=${token}`;
+    const html = resetPasswordTemplate(name, href);
+
+    return this.sendEmail({ to, subject, html });
+  }
+
+  async sendUpdateUserConfirmationEmail(user: User, data: Partial<User>) {
+    const token = uuid();
+
+    const to = user.email;
+    const subject = 'Alteração de dados - Migo To Nihongo';
+    const href = `${process.env.URL}/auth/confirm-update?email=${user.email}&token=${token}`;
+    const keys: string[] = [];
+    data.name && keys.push('nome');
+    data.photo && keys.push('foto');
+    data.passwordHash && keys.push('senha');
+    const html = confirmUserUpdate(user.name, keys, href);
+
+    const redisId = RedisIdEnum.update(user.email);
+    const redisContent = {
+      token,
+      data,
+    };
+
+    return Promise.all([
+      this.sendEmail({ to, subject, html }),
+      this.cacheManager.set(redisId, JSON.stringify(redisContent)),
+    ]);
+  }
+
+  private async sendEmail(message: Message) {
+    return await this.transporter.sendMail({
+      ...message,
+      from: process.env.EMAIL_ADDRESS,
+    });
   }
 }

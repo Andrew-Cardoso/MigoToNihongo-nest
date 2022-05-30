@@ -50,7 +50,7 @@ export class PostsService {
       },
     });
 
-    return approved ? comment : { statusCode: 201 };
+    return comment;
   }
 
   async createPost(
@@ -71,5 +71,3 @@ export class PostsService {
     });
   }
 }
-
-//@Redirect('https://nestjs.com', 301)

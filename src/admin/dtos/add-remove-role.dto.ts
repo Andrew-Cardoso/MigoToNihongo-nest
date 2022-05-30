@@ -1,14 +1,12 @@
 import { Role } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsEnum } from 'class-validator';
 
 export class AddRemoveRoleDto {
-  @IsNotEmpty()
-  @IsEmail()
+  @IsEmail({}, { message: 'Digite um email válido' })
   @Transform(({ value }) => value.toLowerCase())
   email: string;
 
-  @IsNotEmpty()
-  @IsEnum(Role)
+  @IsEnum(Role, { message: 'Permissão inválida' })
   role: Role;
 }

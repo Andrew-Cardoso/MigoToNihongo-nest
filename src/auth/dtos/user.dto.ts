@@ -1,5 +1,5 @@
+import { Role } from '@prisma/client';
 import { Expose } from 'class-transformer';
-import { RoleDto } from './role.dto';
 
 export class UserDto {
   @Expose()
@@ -15,5 +15,5 @@ export class UserDto {
   photo: string;
 
   @Expose()
-  roles: RoleDto;
+  roles: Role;
 }

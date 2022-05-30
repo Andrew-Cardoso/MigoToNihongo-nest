@@ -32,7 +32,7 @@ export class AdminController {
   }
 
   @MapTo(UnapprovedCommentDto)
-  @Get('/comments')
+  @Get('/unapproved-comments')
   async getComments() {
     return await this.adminService.getComments();
   }

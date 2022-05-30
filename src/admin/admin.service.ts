@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { Role, User } from '@prisma/client';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { CurrentUser } from 'src/auth/types/current-user';
-import { badRequest, notFound } from 'src/utils/functions/error-handler';
 import { getRoleViewName } from 'src/utils/functions/role';
 import { PrismaService } from 'src/utils/modules/prisma/prisma.service';
 
@@ -42,10 +45,12 @@ export class AdminService {
       },
     });
 
-    if (!user) notFound('Erro', 'Usuário não encontrado');
+    if (!user) throw new NotFoundException('Usuário não encontrado');
 
     if (user.roles.includes(role))
-      badRequest('Erro', `${user.name} já é um ${getRoleViewName(role)}`);
+      throw new BadRequestException(
+        `${user.name} já é um ${getRoleViewName(role)}`,
+      );
 
     const roles = [...user.roles, role];
     await this.prisma.user.update({ where: { email }, data: { roles } });
@@ -55,7 +60,9 @@ export class AdminService {
 
   async removeRole(email: string, role: Role, currentUser: CurrentUser) {
     if (email === currentUser.email && role === Role.ADMIN)
-      badRequest('Erro', 'Você não pode remover seu cargo de administrador');
+      throw new BadRequestException(
+        'Você não pode remover seu cargo de administrador',
+      );
 
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -65,10 +72,12 @@ export class AdminService {
       },
     });
 
-    if (!user) notFound('Erro', 'Usuário não encontrado');
+    if (!user) throw new NotFoundException('Usuário não encontrado');
 
     if (!user.roles.includes(role))
-      badRequest('Erro', `${user.name} não é um ${getRoleViewName(role)}`);
+      throw new BadRequestException(
+        `${user.name} não é um ${getRoleViewName(role)}`,
+      );
 
     const roles = user.roles.filter((userRole) => userRole !== role);
 
