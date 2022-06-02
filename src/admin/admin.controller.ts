@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/auth/decorators/get-user.decorator';
-import { UserDto } from 'src/auth/dtos/user.dto';
 import { RoleGuard } from 'src/auth/guards/role.guard';
 import { CurrentUser } from 'src/auth/types/current-user';
 import { MapTo } from 'src/interceptors/map-to';
@@ -25,7 +24,6 @@ import { UnapprovedCommentDto } from './dtos/unapproved-comment.dto';
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
-  @MapTo(UserDto)
   @Get('/users')
   async getUsers() {
     return await this.adminService.getUsers();

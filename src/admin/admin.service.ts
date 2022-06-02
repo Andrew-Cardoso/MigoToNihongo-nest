@@ -13,7 +13,16 @@ export class AdminService {
   constructor(private prisma: PrismaService) {}
 
   async getUsers() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      select: {
+        accountVerified: true,
+        email: true,
+        name: true,
+        photo: true,
+        roles: true,
+        signInType: true,
+      },
+    });
   }
   async getComments() {
     return this.prisma.comment.findMany({
